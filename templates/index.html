@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Calendar AM SOFT</title>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(to right, #ffe6f2, #fff);
+}
+
+h2 {
+  text-align: center;
+  color: #d63384;
+  margin-top: 20px;
+}
+
+#calendar {
+  max-width: 900px;
+  margin: 40px auto;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.fc-button {
+  background-color: #ff4da6 !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 8px !important;
+}
+
+.fc-event {
+  background-color: #ff66b2 !important;
+  border: none;
+  border-radius: 6px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>🌸 Calendar AM SOFT 🌸</h2>
+<div id="calendar"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+
+    initialView: 'timeGridWeek',
+    selectable: true,
+
+    slotMinTime: "09:00:00",
+    slotMaxTime: "17:30:00",
+
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+
+    events: "http://127.0.0.1:5000/events",
+
+    select: async function(info) {
+
+      let name = prompt("Nom du client:");
+      if(!name) return;
+
+      let phone = prompt("Téléphone:");
+      if(!phone) return;
+
+      let service = prompt(
+`Service:
+1 Web
+2 Maintenance
+3 Hosting
+4 Network
+5 Support`
+      );
+
+      let serviceName = {
+        "1":"Web",
+        "2":"Maintenance",
+        "3":"Hosting",
+        "4":"Network",
+        "5":"Support"
+      }[service] || "Other";
+
+      let eventData = {
+        name: name,
+        phone: phone,
+        service: serviceName,
+        start: info.start.toISOString(),
+        end: info.end.toISOString()
+      };
+
+      await fetch("http://127.0.0.1:5000/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData)
+      });
+
+      calendar.refetchEvents();
+    },
+
+    eventClick: async function(info){
+
+      if(confirm("Supprimer ce rendez-vous ?")){
+
+        await fetch("http://127.0.0.1:5000/events", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            start: info.event.start.toISOString()
+          })
+        });
+
+        info.event.remove();
+      }
+    }
+
+  });
+
+  calendar.render();
+
+});
+</script>
+
+</body>
+</html>
